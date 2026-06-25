@@ -1,0 +1,154 @@
+import { AppError } from '../../../shared/errors/app-error.js'
+import { StudentProfileModel } from '../models/student-profile.model.js'
+
+type PopulatedSubject = {
+  _id: unknown
+  name?: string
+  slug?: string
+}
+
+type MasteryTopic = {
+  topicId: unknown
+  topicName?: string
+  masteryScore?: number
+  attemptCount?: number
+}
+
+class StudentService {
+  async dashboard(userId: string) {
+    const profile = await StudentProfileModel.findOne({ userId })
+      .populate('preferredSubjects', 'name slug')
+      .lean()
+
+    if (!profile) {
+      throw new AppError(
+        404,
+        'Student profile not found',
+        'STUDENT_PROFILE_NOT_FOUND',
+      )
+    }
+
+    const level = Math.max(1, Number(profile.level) || 1)
+    const xp = Math.max(0, Number(profile.xp) || 0)
+    const xpPerLevel = 1000
+    const levelStartXp = (level - 1) * xpPerLevel
+    const currentLevelXp = Math.min(
+      xpPerLevel,
+      Math.max(0, xp - levelStartXp),
+    )
+    const progressPercent = Math.min(
+      100,
+      Math.round((currentLevelXp / xpPerLevel) * 100),
+    )
+
+    const mastery = (profile.topicMastery ?? []) as MasteryTopic[]
+    const weakTopicIds = new Set(
+      (profile.weakTopics ?? []).map((topicId) => String(topicId)),
+    )
+    const strongTopicIds = new Set(
+      (profile.strongTopics ?? []).map((topicId) => String(topicId)),
+    )
+
+    const mapTopic = (topic: MasteryTopic) => ({
+      id: String(topic.topicId),
+      name: topic.topicName || 'Topic',
+      masteryScore: Math.max(
+        0,
+        Math.min(100, Number(topic.masteryScore) || 0),
+      ),
+      attemptCount: Math.max(0, Number(topic.attemptCount) || 0),
+    })
+
+    const weakTopics = mastery
+      .filter(
+        (topic) =>
+          weakTopicIds.has(String(topic.topicId)) ||
+          (Number(topic.attemptCount) > 0 &&
+            Number(topic.masteryScore) < 50),
+      )
+      .map(mapTopic)
+      .sort((left, right) => left.masteryScore - right.masteryScore)
+      .slice(0, 5)
+
+    const strongTopics = mastery
+      .filter(
+        (topic) =>
+          strongTopicIds.has(String(topic.topicId)) ||
+          (Number(topic.attemptCount) > 0 &&
+            Number(topic.masteryScore) >= 75),
+      )
+      .map(mapTopic)
+      .sort((left, right) => right.masteryScore - left.masteryScore)
+      .slice(0, 5)
+
+    const preferredSubjects = (
+      (profile.preferredSubjects ?? []) as unknown as PopulatedSubject[]
+    ).map((subject) => ({
+      id: String(subject._id),
+      name: subject.name || 'Subject',
+      slug: subject.slug || '',
+    }))
+
+    const firstWeakTopic = weakTopics[0]
+
+    const recommendation =
+      firstWeakTopic
+        ? {
+            title: `Strengthen ${firstWeakTopic.name}`,
+            description:
+              'A focused practice session on your weakest topic can improve your mastery score.',
+            actionLabel: 'Practice weak topic',
+            actionUrl: '/student/practice',
+          }
+        : {
+            title: 'Complete your first AI practice',
+            description:
+              'Choose a subject and topic to receive personalised questions and build your learning profile.',
+            actionLabel: 'Create practice',
+            actionUrl: '/student/practice',
+          }
+
+    return {
+      profile: {
+        gradeLevel: profile.gradeLevel ?? null,
+        level,
+        xp,
+        streak: Math.max(0, Number(profile.streak) || 0),
+        totalPracticeSessions: Math.max(
+          0,
+          Number(profile.totalPracticeSessions) || 0,
+        ),
+        totalTestsTaken: Math.max(
+          0,
+          Number(profile.totalTestsTaken) || 0,
+        ),
+        totalPracticeTime: Math.max(
+          0,
+          Number(profile.totalPracticeTime) || 0,
+        ),
+        averageScore: Math.max(
+          0,
+          Math.min(100, Number(profile.averageScore) || 0),
+        ),
+        accuracyPercent: Math.max(
+          0,
+          Math.min(100, Number(profile.accuracyPercent) || 0),
+        ),
+        preferredSubjects,
+      },
+      xp: {
+        currentLevelXp,
+        requiredForNextLevel: xpPerLevel,
+        remainingXp: Math.max(0, xpPerLevel - currentLevelXp),
+        progressPercent,
+      },
+      recommendation,
+      weakTopics,
+      strongTopics,
+      recentActivity: [],
+      upcomingSessions: [],
+    }
+  }
+}
+
+export const studentService = new StudentService()

@@ -1,0 +1,19 @@
+{
+  "name": "edvixa",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c auto \"npm run dev --workspace=@edvixa/api\" \"npm run dev --workspace=@edvixa/web\"",
+    "build": "npm run build --workspace=@edvixa/api && npm run build --workspace=@edvixa/web",
+    "typecheck": "npm run typecheck --workspace=@edvixa/api && npm run typecheck --workspace=@edvixa/web",
+    "seed": "npm run seed --workspace=@edvixa/api"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

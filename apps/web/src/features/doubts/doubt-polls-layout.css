@@ -1,0 +1,673 @@
+/* Scoped layout repair for Doubt Polls.
+   These selectors intentionally override older global .card/.button rules. */
+.student-doubts-page,
+.teacher-doubts-page {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+}
+
+.student-doubts-page *,
+.teacher-doubts-page * {
+  box-sizing: border-box;
+}
+
+.student-doubts-page > .card,
+.student-doubts-page .doubt-summary-grid > .card,
+.student-doubts-page .doubt-poll-list > .card,
+.teacher-doubts-page > .card,
+.teacher-doubts-page .teacher-doubt-list > .card {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.student-doubts-page .button,
+.teacher-doubts-page .button {
+  width: auto;
+  max-width: 100%;
+  margin-top: 0;
+}
+
+.student-doubts-page .doubt-page-header,
+.teacher-doubts-page .doubt-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.student-doubts-page .doubt-page-header > div,
+.teacher-doubts-page .doubt-page-header > div {
+  min-width: 0;
+}
+
+.student-doubts-page .doubt-page-header h1,
+.teacher-doubts-page .doubt-page-header h1 {
+  margin: 4px 0 6px;
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.12;
+}
+
+.student-doubts-page .doubt-page-header p,
+.teacher-doubts-page .doubt-page-header p {
+  max-width: 760px;
+  margin: 0;
+}
+
+.student-doubts-page .doubt-page-header > .button,
+.teacher-doubts-page .doubt-page-header > .button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-summary-grid,
+.teacher-doubts-page .doubt-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.student-doubts-page .doubt-summary-grid > .card,
+.teacher-doubts-page .doubt-summary-grid > .card {
+  min-height: 96px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.student-doubts-page .doubt-summary-grid > .card > svg,
+.teacher-doubts-page .doubt-summary-grid > .card > svg {
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  flex: 0 0 auto;
+  color: #f4c44e;
+  border-radius: 12px;
+  background: rgba(244, 196, 78, 0.1);
+}
+
+.student-doubts-page .doubt-summary-grid > .card > div,
+.teacher-doubts-page .doubt-summary-grid > .card > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.student-doubts-page .doubt-summary-grid span,
+.teacher-doubts-page .doubt-summary-grid span {
+  display: block;
+  color: #9aa6be;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.student-doubts-page .doubt-summary-grid strong,
+.teacher-doubts-page .doubt-summary-grid strong {
+  display: block;
+  margin: 0;
+  color: #f6f8fc;
+  font-size: 24px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.student-doubts-page .doubt-filter-card,
+.teacher-doubts-page .doubt-filter-card {
+  width: 100%;
+  max-width: none;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(260px, 1.7fr) repeat(4, minmax(135px, 0.8fr));
+  align-items: end;
+  gap: 14px;
+}
+
+.student-doubts-page .doubt-filter-card label,
+.teacher-doubts-page .doubt-filter-card label {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  color: #d9dfeb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.student-doubts-page .doubt-filter-card select,
+.teacher-doubts-page .doubt-filter-card select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  border: 1px solid #2d3951;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #111a2c;
+  color: #f6f8fc;
+  font: inherit;
+  outline: none;
+}
+
+.student-doubts-page .doubt-filter-card select:focus,
+.teacher-doubts-page .doubt-filter-card select:focus,
+.student-doubts-page .doubt-search-field:focus-within,
+.teacher-doubts-page .doubt-search-field:focus-within {
+  border-color: #d7a928;
+  box-shadow: 0 0 0 3px rgba(215, 169, 40, 0.12);
+}
+
+.student-doubts-page .doubt-search-field,
+.teacher-doubts-page .doubt-search-field {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #2d3951;
+  border-radius: 10px;
+  background: #111a2c;
+}
+
+.student-doubts-page .doubt-search-field svg,
+.teacher-doubts-page .doubt-search-field svg {
+  flex: 0 0 auto;
+  color: #7f8ca6;
+}
+
+.student-doubts-page .doubt-search-field input,
+.teacher-doubts-page .doubt-search-field input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f6f8fc;
+  font: inherit;
+}
+
+.student-doubts-page .doubt-search-field input::placeholder,
+.teacher-doubts-page .doubt-search-field input::placeholder {
+  color: #748199;
+}
+
+.student-doubts-page .doubt-poll-list,
+.teacher-doubts-page .teacher-doubt-list {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.student-doubts-page .doubt-poll-card,
+.teacher-doubts-page .teacher-doubt-card {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 20px;
+}
+
+.student-doubts-page .doubt-empty-card,
+.student-doubts-page .doubt-error-card,
+.student-doubts-page .doubt-grade-required,
+.teacher-doubts-page .doubt-empty-card,
+.teacher-doubts-page .doubt-error-card {
+  width: 100%;
+  max-width: none;
+  min-height: 260px;
+  margin: 0;
+  padding: 42px 24px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.student-doubts-page .doubt-empty-card h2,
+.student-doubts-page .doubt-error-card h2,
+.student-doubts-page .doubt-grade-required h2,
+.teacher-doubts-page .doubt-empty-card h2,
+.teacher-doubts-page .doubt-error-card h2 {
+  margin: 0;
+}
+
+.student-doubts-page .doubt-empty-card p,
+.student-doubts-page .doubt-error-card p,
+.student-doubts-page .doubt-grade-required p,
+.teacher-doubts-page .doubt-empty-card p,
+.teacher-doubts-page .doubt-error-card p {
+  margin: 0;
+  max-width: 560px;
+}
+
+.student-doubts-page .doubt-empty-card .button,
+.student-doubts-page .doubt-error-card .button,
+.student-doubts-page .doubt-grade-required .button,
+.teacher-doubts-page .doubt-empty-card .button,
+.teacher-doubts-page .doubt-error-card .button {
+  justify-self: center;
+}
+
+.student-doubts-page .doubt-modal-backdrop,
+.teacher-doubts-page .doubt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 8, 18, 0.8);
+}
+
+.student-doubts-page .doubt-create-modal,
+.teacher-doubts-page .doubt-create-modal {
+  width: min(560px, 100%);
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: auto;
+  margin: 0;
+  padding: 22px;
+  display: grid;
+  gap: 15px;
+}
+
+.student-doubts-page .doubt-create-modal select,
+.student-doubts-page .doubt-create-modal input,
+.student-doubts-page .doubt-create-modal textarea,
+.teacher-doubts-page .doubt-create-modal select,
+.teacher-doubts-page .doubt-create-modal input,
+.teacher-doubts-page .doubt-create-modal textarea {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.student-doubts-page .doubt-modal-actions .button,
+.teacher-doubts-page .doubt-modal-actions .button {
+  width: auto;
+}
+
+@media (max-width: 1180px) {
+  .student-doubts-page .doubt-summary-grid,
+  .teacher-doubts-page .doubt-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-doubts-page .doubt-filter-card,
+  .teacher-doubts-page .doubt-filter-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-doubts-page .doubt-search-field,
+  .teacher-doubts-page .doubt-search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .student-doubts-page .doubt-page-header,
+  .teacher-doubts-page .doubt-page-header {
+    display: grid;
+  }
+
+  .student-doubts-page .doubt-page-header > .button,
+  .teacher-doubts-page .doubt-page-header > .button {
+    width: 100%;
+  }
+
+  .student-doubts-page .doubt-summary-grid,
+  .teacher-doubts-page .doubt-summary-grid,
+  .student-doubts-page .doubt-filter-card,
+  .teacher-doubts-page .doubt-filter-card,
+  .student-doubts-page .doubt-poll-list,
+  .teacher-doubts-page .teacher-doubt-list {
+    grid-template-columns: 1fr;
+  }
+
+  .student-doubts-page .doubt-search-field,
+  .teacher-doubts-page .doubt-search-field {
+    grid-column: auto;
+  }
+
+  .student-doubts-page .doubt-summary-grid > .card,
+  .teacher-doubts-page .doubt-summary-grid > .card {
+    min-height: 86px;
+  }
+}
+
+/* Poll card spacing and hierarchy repair. */
+.student-doubts-page .doubt-poll-card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-height: 100%;
+  border: 1px solid #2b3850;
+  border-radius: 16px;
+  background: #111c2f;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-tags {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid #3b4963;
+  border-radius: 999px;
+  background: #17243a;
+  color: #c3cede;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-status-open {
+  border: 1px solid #355785;
+  background: #1d3252;
+  color: #b8d2ff;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-status-will_cover {
+  border: 1px solid #5e4b91;
+  background: #2a214a;
+  color: #d5c7ff;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-status-resolved {
+  border: 1px solid #28765f;
+  background: #163e32;
+  color: #91e8c4;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-status-closed {
+  border: 1px solid #4a5568;
+  background: #303746;
+  color: #c1cad8;
+}
+
+.student-doubts-page .doubt-poll-card h2 {
+  margin: 0;
+  color: #f7f9fd;
+  font-size: 21px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-description {
+  margin: -6px 0 0;
+  color: #a9b6ca;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-teacher-plan {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border: 1px solid #50417e;
+  border-radius: 12px;
+  background: #1d1935;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-teacher-plan > svg {
+  flex: 0 0 auto;
+  color: #bda4ff;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-teacher-plan strong {
+  display: block;
+  color: #eee9ff;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-teacher-plan p {
+  margin: 5px 0 0;
+  color: #c7bde6;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding-top: 2px;
+  color: #91a0b7;
+  font-size: 13px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.3;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-meta svg {
+  flex: 0 0 auto;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-poll-actions .button {
+  min-height: 40px;
+  padding: 9px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  line-height: 1.2;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-vote.joined {
+  border-color: #7e61bb;
+  background: #2d2351;
+  color: #dfd2ff;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comments-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 2px;
+  padding-top: 17px;
+  border-top: 1px solid #2d3950;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comments-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e7ebf4;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comments-heading strong {
+  line-height: 1.2;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comments-panel > .muted {
+  margin: 0;
+  color: #8f9db4;
+  line-height: 1.5;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment {
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid #2d3950;
+  border-radius: 11px;
+  background: #0f192a;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment > div strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment > div span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #251f42;
+  color: #c9b7ff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment time {
+  margin-left: auto;
+  color: #77869d;
+  white-space: nowrap;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment p {
+  margin: 8px 0 0;
+  color: #c6cfdd;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment-compose input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  margin: 0;
+  padding: 0 13px;
+  border: 1px solid #32405a;
+  border-radius: 10px;
+  outline: none;
+  background: #0f192a;
+  color: #f5f7fb;
+  font: inherit;
+}
+
+.student-doubts-page .doubt-poll-card .doubt-comment-compose input:focus {
+  border-color: #d7a928;
+  box-shadow: 0 0 0 3px rgba(215, 169, 40, 0.12);
+}
+
+.student-doubts-page .doubt-pagination {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.student-doubts-page .doubt-pagination .button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.student-doubts-page .doubt-pagination span {
+  min-width: 72px;
+  color: #9ba8bc;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .student-doubts-page .doubt-poll-card .doubt-poll-card-top {
+    display: grid;
+  }
+
+  .student-doubts-page .doubt-poll-card .doubt-status {
+    justify-self: start;
+  }
+
+  .student-doubts-page .doubt-poll-card .doubt-poll-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .student-doubts-page .doubt-poll-card .doubt-poll-actions .button {
+    width: 100%;
+  }
+
+  .student-doubts-page .doubt-poll-card .doubt-comment-compose {
+    grid-template-columns: 1fr;
+  }
+
+  .student-doubts-page .doubt-poll-card .doubt-comment-compose .button {
+    width: 100%;
+  }
+
+  .student-doubts-page .doubt-pagination {
+    justify-content: space-between;
+  }
+
+  .student-doubts-page .doubt-pagination span {
+    display: none;
+  }
+}
