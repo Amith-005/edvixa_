@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+*.bak
+*.tsbuildinfo
+.DS_Store
+
+# TypeScript incremental build output

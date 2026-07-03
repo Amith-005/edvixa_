@@ -1,0 +1,15 @@
+import { useQuery } from '@tanstack/react-query'
+import { CircleDollarSign, Download, RotateCcw, WalletCards } from 'lucide-react'
+import { Button, Card, StatCard } from '../../../components/ui'
+import { api } from '../../../lib/api'
+
+type Fee={_id:string;teacherId?:{name?:string};bookingId?:{_id:string;topicName?:string;scheduledAt?:string;status?:string};totalAmount:number;platformFee:number;status:string;refundStatus:string;paymentGateway:string;gatewayPaymentId?:string|null;paidAt?:string|null;createdAt:string}
+type FeeHistory={items:Fee[];totals:{paid:number;pending:number;refunded:number}}
+const money=(value:number)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(value||0)
+const date=(value?:string|null)=>value?new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value)):'—'
+export function StudentFeesPage(){
+  const query=useQuery({queryKey:['student','fees'],queryFn:async()=>{const response=await api.get<{success:true;data:FeeHistory}>('/students/fees');return response.data.data}})
+  const receipt=async(bookingId:string)=>{const response=await api.get(`/bookings/${bookingId}/receipt`,{responseType:'blob'});const url=URL.createObjectURL(response.data);const link=document.createElement('a');link.href=url;link.download=`edvixa-receipt-${bookingId}.txt`;link.click();URL.revokeObjectURL(url)}
+  return <div className="student-fees-page"><div className="page-header"><div><span className="eyebrow">Payments</span><h1>Fee history</h1><p className="muted">Review booking charges, payment status, refunds, and available receipts.</p></div></div>{query.isLoading?<div className="skeleton student-fees-skeleton"/>:query.isError||!query.data?<Card className="student-empty-state"><p>Could not load your payment history.</p></Card>:<><div className="stat-grid"><StatCard label="Paid" value={money(query.data.totals.paid)} icon={<CircleDollarSign/>}/><StatCard label="Pending" value={money(query.data.totals.pending)} icon={<WalletCards/>}/><StatCard label="Refunded" value={money(query.data.totals.refunded)} icon={<RotateCcw/>}/></div><Card>{query.data.items.length===0?<div className="student-empty-state"><p>No fee records yet. Completed checkout payments will appear here.</p></div>:<div className="student-fee-list">{query.data.items.map(fee=><div className="student-fee-row" key={fee._id}><div><strong>{fee.bookingId?.topicName??'Teacher session'}</strong><p className="muted">{fee.teacherId?.name??'Teacher'} · {date(fee.bookingId?.scheduledAt)}</p><small>{fee.gatewayPaymentId??fee.paymentGateway}</small></div><div><strong>{money(fee.totalAmount)}</strong><p className="muted">Includes {money(fee.platformFee)} platform fee</p></div><div><span className={`badge badge-${fee.status==='paid'?'success':fee.status==='failed'?'danger':'warning'}`}>{fee.status}</span>{fee.refundStatus!=='none'&&<span className="badge badge-warning">refund {fee.refundStatus}</span>}</div>{fee.bookingId?._id&&fee.status==='paid'?<Button className="button-secondary" onClick={()=>receipt(fee.bookingId!._id)}><Download size={16}/>Receipt</Button>:<span/>}</div>)}</div>}</Card></>}
+  </div>
+}
