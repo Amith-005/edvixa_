@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Megaphone, Pencil, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Card, Input } from '../../../components/ui'
 import { formatDate, getAdminData, getApiError, patchAdminData, postAdminData } from '../api'
 import { AdminEmpty, AdminError, AdminLoading, AdminModal, AdminPageHeader, AdminPagination, StatusBadge } from '../components'
@@ -12,6 +12,7 @@ const localValue=(value?:string|null)=>value?new Date(new Date(value).getTime()-
 export default function AdminAnnouncementsPage(){
   const client=useQueryClient();const [page,setPage]=useState(1),[status,setStatus]=useState('all'),[audience,setAudience]=useState('all'),[editing,setEditing]=useState<AdminAnnouncement|null>(null),[open,setOpen]=useState(false),[draft,setDraft]=useState<Draft>(blank()),[notice,setNotice]=useState('')
   const query=useQuery({queryKey:['admin','announcements',{page,status,audience}],queryFn:()=>getAdminData<Paginated<AdminAnnouncement>>('/admin/announcements',{page,limit:12,status,audience:audience==='all'?undefined:audience})})
+  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),4000);return()=>window.clearTimeout(timer)},[notice])
   const mutation=useMutation({mutationFn:()=>{const body={...draft,publishAt:draft.publishAt?new Date(draft.publishAt).toISOString():null,expiresAt:draft.expiresAt?new Date(draft.expiresAt).toISOString():null};return editing?patchAdminData(`/admin/announcements/${editing._id}`,body):postAdminData('/admin/announcements',body)},onSuccess:async()=>{setNotice(editing?'Announcement updated.':'Announcement created.');close();await client.invalidateQueries({queryKey:['admin','announcements']})}})
   const close=()=>{setOpen(false);setEditing(null);setDraft(blank())}
   const create=()=>{setEditing(null);setDraft(blank());setOpen(true);setNotice('')}

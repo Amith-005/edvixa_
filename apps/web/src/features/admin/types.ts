@@ -50,6 +50,8 @@ export type AdminBooking = {
   scheduledAt: string
   endAt: string
   status: string
+  operationalStatus?: string
+  canComplete?: boolean
   paymentStatus: string
   totalAmount?: number
   timezone: string
@@ -62,7 +64,7 @@ export type AdminFee = {
   _id: string
   studentId: NamedUser
   teacherId: NamedUser
-  bookingId: { _id: string; topicName: string; scheduledAt: string; status: string }
+  bookingId: { _id: string; topicName: string; scheduledAt: string; status: string; completedAt?: string | null }
   amount: number
   platformFee: number
   platformCommission: number
@@ -79,6 +81,11 @@ export type AdminFee = {
   refundAmount: number
   refundReason?: string | null
   payoutStatus: string
+  payoutEligible?: boolean
+  payoutBlockedReason?: string | null
+  canMarkPayoutPaid?: boolean
+  refundEligible?: boolean
+  hasFinancialConflict?: boolean
   createdAt: string
 }
 

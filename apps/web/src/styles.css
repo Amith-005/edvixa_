@@ -432,3 +432,62 @@
 @media(max-width:950px){.student-leaderboard-row{grid-template-columns:44px 44px 1fr}.student-leaderboard-row>div:nth-child(4),.student-leaderboard-row>div:nth-child(5){grid-column:3}.student-fee-row{grid-template-columns:1fr 1fr}.platform-support-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.student-leaderboard-row{grid-template-columns:38px 40px 1fr;padding:11px;gap:9px}.student-leaderboard-row>div:nth-child(4),.student-leaderboard-row>div:nth-child(5){grid-column:2/-1}.student-fee-row{grid-template-columns:1fr}.student-fee-row .button{width:100%}.platform-announcement{grid-template-columns:1fr}.platform-announcement-icon{width:40px;height:40px}}
 /* EDVIXA_SHARED_COMPLETION_END */
+
+/* EDVIXA_ADMIN_USER_DETAILS_FIX_START */
+.admin-user-details-page{gap:20px}
+.admin-profile-hero{display:flex;align-items:center;gap:20px;padding:24px;min-width:0;background:radial-gradient(circle at 100% 0%,#8b5cf61f 0,transparent 40%),linear-gradient(145deg,#111e30,#0e1929)}
+.admin-profile-avatar{width:78px;height:78px;flex:0 0 78px;border-radius:20px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,var(--purple),#5b8cff);border:1px solid #6c78b8;color:#fff;font-size:28px;font-weight:900;box-shadow:0 10px 26px #0005}
+.admin-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.admin-profile-copy{min-width:0;display:grid;gap:10px}
+.admin-profile-copy h2{margin:0;font-size:25px;line-height:1.2}
+.admin-profile-badges{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.admin-profile-contact-list{display:flex;align-items:center;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.admin-profile-contact-list span{display:inline-flex;align-items:center;gap:7px;min-width:0;overflow-wrap:anywhere}
+.admin-profile-contact-list svg{color:var(--gold);flex:0 0 auto}
+.admin-profile-alert{margin-top:2px;max-width:720px}
+.admin-metric-grid.compact .stat-card{min-height:104px;padding:19px}
+.admin-metric-grid.compact .stat-icon{width:43px;height:43px}
+.admin-metric-grid.compact .stat-value{font-size:24px}
+.admin-two-column{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:20px;align-items:start}
+.admin-user-detail-columns>.card{height:100%}
+.admin-detail-card{min-width:0}
+.admin-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.admin-card-heading h3{margin:0;font-size:18px}
+.admin-card-heading p{margin-top:6px;font-size:12px}
+.admin-definition-list{display:grid;margin:0}
+.admin-definition-list>div{display:grid;grid-template-columns:minmax(125px,.65fr) minmax(0,1fr);align-items:center;gap:18px;padding:13px 0;border-bottom:1px solid #213049}
+.admin-definition-list>div:first-child{padding-top:0}
+.admin-definition-list>div:last-child{padding-bottom:0;border-bottom:0}
+.admin-definition-list dt{color:var(--muted);font-size:12px;font-weight:700}
+.admin-definition-list dd{margin:0;color:var(--text);font-size:13px;font-weight:750;text-align:right;overflow-wrap:anywhere}
+.admin-profile-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+.admin-profile-field-grid>div{min-width:0;padding:13px;border:1px solid var(--line);border-radius:11px;background:#0b1626}
+.admin-profile-field-grid dt{color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+.admin-profile-field-grid dd{margin:0;color:var(--text);font-size:13px;font-weight:750;line-height:1.45;overflow-wrap:anywhere}
+.admin-profile-chip-list{display:flex;flex-wrap:wrap;gap:6px}
+.admin-profile-chip-list span{padding:5px 8px;border:1px solid #334965;border-radius:99px;background:#17263b;color:#c8d4e5;font-size:11px;font-weight:750}
+.admin-inline-empty{min-height:155px;display:grid;place-items:center;text-align:center;padding:20px;border:1px dashed #33445e;border-radius:12px;color:var(--muted)}
+.admin-count-pill{min-width:34px;height:34px;padding:0 10px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;background:#f2bd4b16;border:1px solid #765d2b;color:#ffd77d;font-size:12px;font-weight:900}
+.admin-bookings-card .admin-table-wrap{margin-top:4px}
+@media(max-width:1100px){.admin-two-column{grid-template-columns:1fr}.admin-profile-field-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.admin-profile-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.admin-profile-hero{align-items:flex-start;flex-direction:column}.admin-profile-avatar{width:66px;height:66px;flex-basis:66px;border-radius:17px}.admin-profile-contact-list{align-items:flex-start;flex-direction:column;gap:8px}.admin-profile-field-grid{grid-template-columns:1fr}.admin-definition-list>div{grid-template-columns:1fr;gap:5px}.admin-definition-list dd{text-align:left}.admin-metric-grid.compact{grid-template-columns:1fr}.admin-card-heading{align-items:flex-start}}
+/* EDVIXA_ADMIN_USER_DETAILS_FIX_END */
+
+/* Admin teacher review hardening */
+.admin-chip-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.admin-chip{display:inline-flex;align-items:center;min-height:26px;padding:4px 9px;border:1px solid #31435f;border-radius:999px;background:#17253a;color:#d8e3f2;font-size:11px;font-weight:750;line-height:1.2;white-space:nowrap}
+.admin-review-notice{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;margin-bottom:18px;border:1px solid var(--line);border-radius:12px;background:#101d2f}
+.admin-review-notice svg{flex:0 0 auto;margin-top:2px}
+.admin-review-notice strong{display:block;margin-bottom:3px}
+.admin-review-notice p{margin:0;font-size:12px;line-height:1.55}
+.admin-review-notice-warning{border-color:#765e2b;background:#342a17;color:#ffda82}
+.admin-review-notice-success{border-color:#286f58;background:#123429;color:#83e7ba}
+.admin-review-notice-danger{border-color:#7d3948;background:#391c25;color:#ffadb8}
+.admin-modal-footer-only{justify-content:flex-end;margin-top:18px}
+
+/* EDVIXA_ADMIN_FINAL_AUDIT_FIXES */
+.admin-inline-alert{display:flex;align-items:flex-start;gap:9px}
+.admin-inline-alert svg{flex:0 0 auto;margin-top:1px}
+.admin-danger-text{color:#ff9ca7!important;font-weight:800}
+.admin-action-note{display:block;max-width:210px;color:var(--muted);line-height:1.4}

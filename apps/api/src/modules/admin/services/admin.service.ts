@@ -34,7 +34,7 @@ type TeacherListQuery = PaginationQuery & {
 }
 type BookingListQuery = PaginationQuery & {
   search?: string
-  status: 'all' | 'pending' | 'accepted' | 'rejected' | 'upcoming' | 'completed' | 'cancelled' | 'rescheduled'
+  status: 'all' | 'pending' | 'accepted' | 'rejected' | 'upcoming' | 'awaiting_completion' | 'completed' | 'cancelled' | 'rescheduled'
   paymentStatus: 'all' | 'pending' | 'paid' | 'failed' | 'refunded'
   from?: Date
   to?: Date
@@ -50,6 +50,19 @@ type ReportQuery = {
   format: 'json' | 'csv'
   from?: Date
   to?: Date
+}
+
+const ACTIVE_BOOKING_STATUSES = ['pending', 'accepted', 'upcoming', 'rescheduled'] as const
+const COMPLETABLE_BOOKING_STATUSES = ['accepted', 'upcoming', 'rescheduled'] as const
+
+function effectiveBookingStatus(booking: { status: string; endAt: Date | string }): string {
+  if (
+    COMPLETABLE_BOOKING_STATUSES.includes(booking.status as (typeof COMPLETABLE_BOOKING_STATUSES)[number])
+    && new Date(booking.endAt).getTime() <= Date.now()
+  ) {
+    return 'awaiting_completion'
+  }
+  return booking.status
 }
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -140,7 +153,15 @@ class AdminService {
         { $group: { _id: null, total: { $sum: '$totalAmount' } } },
       ]),
       FeeModel.aggregate<{ total: number }>([
-        { $match: { status: 'paid', payoutStatus: { $in: ['pending', 'approved'] } } },
+        {
+          $match: {
+            status: 'paid',
+            refundStatus: 'none',
+            payoutStatus: { $in: ['pending', 'approved'] },
+          },
+        },
+        { $lookup: { from: 'bookings', localField: 'bookingId', foreignField: '_id', as: 'booking' } },
+        { $match: { 'booking.0.status': 'completed' } },
         { $group: { _id: null, total: { $sum: '$teacherEarning' } } },
       ]),
       SupportTicketModel.countDocuments({ status: { $in: ['open', 'in_progress'] } }),
@@ -393,7 +414,46 @@ class AdminService {
   ) {
     const profile = await TeacherProfileModel.findById(profileId).populate('userId', 'name email')
     if (!profile) throw new AppError(404, 'Teacher profile not found', 'TEACHER_PROFILE_NOT_FOUND')
-    if (decision === 'rejected' && !reason) throw new AppError(422, 'A rejection reason is required', 'REJECTION_REASON_REQUIRED')
+    if (!profile.submittedAt) {
+      throw new AppError(
+        422,
+        'This teacher profile is still a draft and has not been submitted for review',
+        'TEACHER_APPLICATION_NOT_SUBMITTED',
+      )
+    }
+    if (profile.approvalStatus !== 'pending') {
+      throw new AppError(
+        409,
+        'Only pending teacher applications can be approved or rejected',
+        'TEACHER_APPLICATION_NOT_PENDING',
+      )
+    }
+    if (decision === 'approved') {
+      if (profile.profileCompletedPercent < 80) {
+        throw new AppError(
+          422,
+          'The teacher profile must be at least 80% complete before approval',
+          'TEACHER_PROFILE_INCOMPLETE',
+        )
+      }
+      if (profile.documents.length === 0) {
+        throw new AppError(
+          422,
+          'At least one qualification document is required before approval',
+          'TEACHER_DOCUMENT_REQUIRED',
+        )
+      }
+      if (profile.subjects.length === 0 || profile.gradeLevels.length === 0) {
+        throw new AppError(
+          422,
+          'At least one subject and grade level are required before approval',
+          'TEACHER_TEACHING_SCOPE_REQUIRED',
+        )
+      }
+    }
+    if (decision === 'rejected' && !reason) {
+      throw new AppError(422, 'A rejection reason is required', 'REJECTION_REASON_REQUIRED')
+    }
 
     profile.approvalStatus = decision
     profile.isApproved = decision === 'approved'
@@ -415,7 +475,12 @@ class AdminService {
 
   async listBookings(query: BookingListQuery) {
     const filter: Record<string, unknown> = {}
-    if (query.status !== 'all') filter.status = query.status
+    if (query.status === 'awaiting_completion') {
+      filter.status = { $in: COMPLETABLE_BOOKING_STATUSES }
+      filter.endAt = { $lte: new Date() }
+    } else if (query.status !== 'all') {
+      filter.status = query.status
+    }
     if (query.paymentStatus !== 'all') filter.paymentStatus = query.paymentStatus
     if (query.from || query.to) {
       filter.scheduledAt = {
@@ -438,7 +503,7 @@ class AdminService {
       ]
     }
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       BookingModel.find(filter)
         .populate('studentId', 'name email avatar')
         .populate('teacherId', 'name email avatar')
@@ -450,6 +515,20 @@ class AdminService {
         .lean(),
       BookingModel.countDocuments(filter),
     ])
+
+    const items = rawItems.map((booking) => {
+      const fee = booking.feeId as unknown as { totalAmount?: number } | null
+      const operationalStatus = effectiveBookingStatus(booking)
+      return {
+        ...booking,
+        operationalStatus,
+        totalAmount: fee?.totalAmount ?? 0,
+        canComplete:
+          operationalStatus === 'awaiting_completion'
+          && booking.paymentStatus === 'paid',
+      }
+    })
+
     return { items, pagination: pageMeta(total, query.page, query.limit) }
   }
 
@@ -460,6 +539,8 @@ class AdminService {
   ) {
     const booking = await BookingModel.findById(bookingId)
     if (!booking) throw new AppError(404, 'Booking not found', 'BOOKING_NOT_FOUND')
+
+    let resultBooking = booking
 
     if (input.action === 'cancel') {
       if (['completed', 'cancelled', 'rejected'].includes(booking.status)) {
@@ -479,8 +560,16 @@ class AdminService {
         booking.paymentStatus = 'failed'
         await fee.save()
       } else if (fee?.status === 'paid') {
+        if (['approved', 'paid'].includes(fee.payoutStatus)) {
+          throw new AppError(
+            409,
+            'This booking has an approved or released teacher payout and requires financial reconciliation before cancellation',
+            'BOOKING_PAYOUT_RECONCILIATION_REQUIRED',
+          )
+        }
         fee.refundReason = input.reason
         fee.refundAmount = fee.totalAmount
+        fee.payoutStatus = 'failed'
         if (fee.paymentGateway === 'demo') {
           fee.status = 'refunded'
           fee.refundStatus = 'processed'
@@ -518,6 +607,7 @@ class AdminService {
         { new: true },
       )
       if (!completed) throw new AppError(409, 'This booking was already updated', 'BOOKING_ALREADY_UPDATED')
+      resultBooking = completed
 
       const taughtBefore = await BookingModel.exists({
         _id: { $ne: completed._id },
@@ -531,7 +621,7 @@ class AdminService {
       )
     }
     await this.audit(context, `booking.${input.action}`, 'booking', bookingId, `${input.action} applied to booking`, 'reason' in input && input.reason ? { reason: input.reason } : undefined)
-    return booking
+    return resultBooking
   }
 
   async listFees(query: FeeListQuery) {
@@ -549,11 +639,11 @@ class AdminService {
       ]
     }
 
-    const [items, total, totals] = await Promise.all([
+    const [rawItems, total, totals] = await Promise.all([
       FeeModel.find(filter)
         .populate('studentId', 'name email')
         .populate('teacherId', 'name email')
-        .populate('bookingId', 'topicName scheduledAt status')
+        .populate('bookingId', 'topicName scheduledAt status completedAt')
         .sort({ createdAt: -1 })
         .skip((query.page - 1) * query.limit)
         .limit(query.limit)
@@ -561,18 +651,78 @@ class AdminService {
       FeeModel.countDocuments(filter),
       FeeModel.aggregate<{ paid: number; pending: number; refunded: number; teacherOwed: number }>([
         { $match: filter },
+        { $lookup: { from: 'bookings', localField: 'bookingId', foreignField: '_id', as: 'booking' } },
+        { $set: { bookingStatus: { $ifNull: [{ $first: '$booking.status' }, null] } } },
         {
           $group: {
             _id: null,
             paid: { $sum: { $cond: [{ $eq: ['$status', 'paid'] }, '$totalAmount', 0] } },
             pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$totalAmount', 0] } },
-            refunded: { $sum: '$refundAmount' },
-            teacherOwed: { $sum: { $cond: [{ $in: ['$payoutStatus', ['pending', 'approved']] }, '$teacherEarning', 0] } },
+            refunded: {
+              $sum: {
+                $cond: [
+                  { $or: [{ $eq: ['$status', 'refunded'] }, { $eq: ['$refundStatus', 'processed'] }] },
+                  '$refundAmount',
+                  0,
+                ],
+              },
+            },
+            teacherOwed: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ['$status', 'paid'] },
+                      { $eq: ['$refundStatus', 'none'] },
+                      { $in: ['$payoutStatus', ['pending', 'approved']] },
+                      { $eq: ['$bookingStatus', 'completed'] },
+                    ],
+                  },
+                  '$teacherEarning',
+                  0,
+                ],
+              },
+            },
           },
         },
       ]),
     ])
-    return { items, pagination: pageMeta(total, query.page, query.limit), totals: totals[0] ?? { paid: 0, pending: 0, refunded: 0, teacherOwed: 0 } }
+
+    const items = rawItems.map((fee) => {
+      const booking = fee.bookingId as unknown as { status?: string } | null
+      const bookingCompleted = booking?.status === 'completed'
+      const refundOpen = !['none', 'failed'].includes(fee.refundStatus)
+      const payoutReleased = ['approved', 'paid'].includes(fee.payoutStatus)
+      const hasFinancialConflict = refundOpen && payoutReleased
+
+      let payoutBlockedReason: string | null = null
+      if (fee.status !== 'paid') payoutBlockedReason = 'Payment is not settled'
+      else if (!bookingCompleted) payoutBlockedReason = 'Complete the booking before approving payout'
+      else if (fee.refundStatus !== 'none') payoutBlockedReason = 'A refund is active for this payment'
+      else if (fee.payoutStatus !== 'pending') payoutBlockedReason = 'Payout is not pending approval'
+
+      return {
+        ...fee,
+        payoutEligible: payoutBlockedReason === null,
+        payoutBlockedReason,
+        canMarkPayoutPaid:
+          fee.status === 'paid'
+          && bookingCompleted
+          && fee.refundStatus === 'none'
+          && fee.payoutStatus === 'approved',
+        refundEligible:
+          fee.status === 'paid'
+          && ['none', 'failed'].includes(fee.refundStatus)
+          && !payoutReleased,
+        hasFinancialConflict,
+      }
+    })
+
+    return {
+      items,
+      pagination: pageMeta(total, query.page, query.limit),
+      totals: totals[0] ?? { paid: 0, pending: 0, refunded: 0, teacherOwed: 0 },
+    }
   }
 
   async updateFee(
@@ -586,22 +736,66 @@ class AdminService {
     const fee = await FeeModel.findById(feeId)
     if (!fee) throw new AppError(404, 'Fee record not found', 'FEE_NOT_FOUND')
 
+    const booking = await BookingModel.findById(fee.bookingId).select('status completedAt')
+    if (!booking) throw new AppError(409, 'The related booking could not be found', 'BOOKING_NOT_FOUND')
+
     if (input.action === 'request-refund') {
-      if (fee.status !== 'paid') throw new AppError(409, 'Only paid transactions can be refunded', 'FEE_NOT_PAID')
-      if (fee.refundStatus !== 'none' && fee.refundStatus !== 'failed') throw new AppError(409, 'A refund is already in progress', 'REFUND_ALREADY_REQUESTED')
+      if (fee.status !== 'paid') {
+        throw new AppError(409, 'Only paid transactions can be refunded', 'FEE_NOT_PAID')
+      }
+      if (fee.refundStatus !== 'none' && fee.refundStatus !== 'failed') {
+        throw new AppError(409, 'A refund is already in progress', 'REFUND_ALREADY_REQUESTED')
+      }
+      if (fee.payoutStatus === 'paid') {
+        throw new AppError(
+          409,
+          'The teacher payout has already been released. Reconcile the payout before refunding.',
+          'PAYOUT_ALREADY_RELEASED',
+        )
+      }
+      if (fee.payoutStatus === 'approved') {
+        throw new AppError(
+          409,
+          'The teacher payout is already approved. Revoke or reconcile it before refunding.',
+          'PAYOUT_ALREADY_APPROVED',
+        )
+      }
       fee.refundStatus = 'requested'
       fee.refundReason = input.reason
       fee.refundAmount = fee.totalAmount
     } else if (input.action === 'approve-payout') {
-      if (fee.status !== 'paid' || fee.payoutStatus !== 'pending') throw new AppError(409, 'This payout cannot be approved', 'PAYOUT_NOT_APPROVABLE')
+      if (fee.status !== 'paid' || fee.payoutStatus !== 'pending') {
+        throw new AppError(409, 'This payout cannot be approved', 'PAYOUT_NOT_APPROVABLE')
+      }
+      if (fee.refundStatus !== 'none') {
+        throw new AppError(409, 'A payout cannot be approved while a refund is active', 'REFUND_BLOCKS_PAYOUT')
+      }
+      if (booking.status !== 'completed') {
+        throw new AppError(409, 'Complete the booking before approving the teacher payout', 'BOOKING_NOT_COMPLETED')
+      }
       fee.payoutStatus = 'approved'
     } else {
-      if (fee.payoutStatus !== 'approved') throw new AppError(409, 'Approve the payout before marking it paid', 'PAYOUT_NOT_APPROVED')
+      if (fee.payoutStatus !== 'approved') {
+        throw new AppError(409, 'Approve the payout before marking it paid', 'PAYOUT_NOT_APPROVED')
+      }
+      if (fee.status !== 'paid' || fee.refundStatus !== 'none') {
+        throw new AppError(409, 'This payout is blocked by the payment or refund state', 'PAYOUT_BLOCKED')
+      }
+      if (booking.status !== 'completed') {
+        throw new AppError(409, 'Complete the booking before releasing the teacher payout', 'BOOKING_NOT_COMPLETED')
+      }
       fee.payoutStatus = 'paid'
     }
 
     await fee.save()
-    await this.audit(context, `fee.${input.action}`, 'fee', feeId, `${input.action} applied to fee`, 'reason' in input ? { reason: input.reason } : undefined)
+    await this.audit(
+      context,
+      `fee.${input.action}`,
+      'fee',
+      feeId,
+      `${input.action} applied to fee`,
+      'reason' in input ? { reason: input.reason } : undefined,
+    )
     return fee
   }
 
@@ -640,7 +834,23 @@ class AdminService {
         { $group: { _id: '$role', value: { $sum: 1 } } },
       ]),
       BookingModel.aggregate<{ _id: string; value: number }>([
-        { $group: { _id: '$status', value: { $sum: 1 } } },
+        {
+          $project: {
+            effectiveStatus: {
+              $cond: [
+                {
+                  $and: [
+                    { $in: ['$status', COMPLETABLE_BOOKING_STATUSES] },
+                    { $lte: ['$endAt', now] },
+                  ],
+                },
+                'awaiting_completion',
+                '$status',
+              ],
+            },
+          },
+        },
+        { $group: { _id: '$effectiveStatus', value: { $sum: 1 } } },
         { $sort: { value: -1 } },
       ]),
       BookingModel.aggregate<{ _id: Types.ObjectId; value: number; name: string }>([
@@ -707,6 +917,7 @@ class AdminService {
         .populate('studentId', 'name email')
         .populate('teacherId', 'name email')
         .populate('subjectId', 'name')
+        .populate('feeId', 'totalAmount currency refundStatus payoutStatus')
         .sort({ createdAt: -1 })
         .limit(5000)
         .lean()
@@ -714,10 +925,13 @@ class AdminService {
         const student = booking.studentId as unknown as { name?: string; email?: string }
         const teacher = booking.teacherId as unknown as { name?: string; email?: string }
         const subject = booking.subjectId as unknown as { name?: string }
+        const fee = booking.feeId as unknown as { totalAmount?: number; currency?: string; refundStatus?: string; payoutStatus?: string } | null
         return {
           id: String(booking._id), student: student?.name, studentEmail: student?.email,
           teacher: teacher?.name, teacherEmail: teacher?.email, subject: subject?.name,
-          topic: booking.topicName, status: booking.status, paymentStatus: booking.paymentStatus,
+          topic: booking.topicName, status: effectiveBookingStatus(booking), paymentStatus: booking.paymentStatus,
+          totalAmount: fee?.totalAmount ?? 0, currency: fee?.currency ?? 'INR',
+          refundStatus: fee?.refundStatus ?? 'none', payoutStatus: fee?.payoutStatus ?? 'pending',
           scheduledAt: toIso(booking.scheduledAt), createdAt: toIso(booking.createdAt),
         }
       })
@@ -780,15 +994,80 @@ class AdminService {
   }
 
   async createAnnouncement(input: Record<string, unknown>, context: AdminContext) {
-    const announcement = await AnnouncementModel.create({ ...input, createdBy: context.adminId, updatedBy: context.adminId })
-    await this.audit(context, 'announcement.create', 'announcement', String(announcement._id), `Created announcement: ${announcement.title}`)
+    const status = String(input.status ?? 'draft')
+    const publishAt = input.publishAt
+      ? new Date(input.publishAt as string | Date)
+      : status === 'published'
+        ? new Date()
+        : null
+    const expiresAt = input.expiresAt ? new Date(input.expiresAt as string | Date) : null
+
+    if (expiresAt && expiresAt.getTime() <= (publishAt?.getTime() ?? Date.now())) {
+      throw new AppError(
+        422,
+        'The expiry time must be later than the publication time',
+        'ANNOUNCEMENT_DATE_RANGE_INVALID',
+      )
+    }
+
+    const announcement = await AnnouncementModel.create({
+      ...input,
+      publishAt,
+      expiresAt,
+      createdBy: context.adminId,
+      updatedBy: context.adminId,
+    })
+    await this.audit(
+      context,
+      'announcement.create',
+      'announcement',
+      String(announcement._id),
+      `Created announcement: ${announcement.title}`,
+    )
     return announcement
   }
 
   async updateAnnouncement(id: string, input: Record<string, unknown>, context: AdminContext) {
-    const announcement = await AnnouncementModel.findByIdAndUpdate(id, { $set: { ...input, updatedBy: context.adminId } }, { new: true, runValidators: true })
+    const announcement = await AnnouncementModel.findById(id)
     if (!announcement) throw new AppError(404, 'Announcement not found', 'ANNOUNCEMENT_NOT_FOUND')
-    await this.audit(context, 'announcement.update', 'announcement', id, `Updated announcement: ${announcement.title}`)
+
+    const nextStatus = String(input.status ?? announcement.status)
+    const hasPublishAt = Object.prototype.hasOwnProperty.call(input, 'publishAt')
+    const hasExpiresAt = Object.prototype.hasOwnProperty.call(input, 'expiresAt')
+    let publishAt = hasPublishAt
+      ? input.publishAt
+        ? new Date(input.publishAt as string | Date)
+        : null
+      : announcement.publishAt
+    const expiresAt = hasExpiresAt
+      ? input.expiresAt
+        ? new Date(input.expiresAt as string | Date)
+        : null
+      : announcement.expiresAt
+
+    if (nextStatus === 'published' && !publishAt) publishAt = new Date()
+    if (expiresAt && expiresAt.getTime() <= (publishAt?.getTime() ?? Date.now())) {
+      throw new AppError(
+        422,
+        'The expiry time must be later than the publication time',
+        'ANNOUNCEMENT_DATE_RANGE_INVALID',
+      )
+    }
+
+    announcement.set({
+      ...input,
+      publishAt,
+      expiresAt,
+      updatedBy: context.adminId,
+    })
+    await announcement.save()
+    await this.audit(
+      context,
+      'announcement.update',
+      'announcement',
+      id,
+      `Updated announcement: ${announcement.title}`,
+    )
     return announcement
   }
 

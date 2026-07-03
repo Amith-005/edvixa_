@@ -56,7 +56,7 @@ export const adminBookingListSchema = z.object({
   query: z.object({
     ...pagination,
     search: z.string().trim().max(120).optional(),
-    status: z.enum(['all', 'pending', 'accepted', 'rejected', 'upcoming', 'completed', 'cancelled', 'rescheduled']).default('all'),
+    status: z.enum(['all', 'pending', 'accepted', 'rejected', 'upcoming', 'awaiting_completion', 'completed', 'cancelled', 'rescheduled']).default('all'),
     paymentStatus: z.enum(['all', 'pending', 'paid', 'failed', 'refunded']).default('all'),
     from: z.coerce.date().optional(),
     to: z.coerce.date().optional(),
@@ -110,7 +110,7 @@ export const announcementListSchema = z.object({
   }),
 })
 
-const announcementBody = z.object({
+const announcementFields = z.object({
   title: z.string().trim().min(3).max(140),
   message: z.string().trim().min(3).max(2000),
   audience: z.enum(['all', 'student', 'teacher']).default('all'),
@@ -120,8 +120,21 @@ const announcementBody = z.object({
   expiresAt: z.coerce.date().nullable().optional(),
 })
 
+const announcementBody = announcementFields.superRefine((value, context) => {
+  if (value.publishAt && value.expiresAt && value.expiresAt <= value.publishAt) {
+    context.addIssue({
+      code: 'custom',
+      path: ['expiresAt'],
+      message: 'Expiry time must be later than publication time',
+    })
+  }
+})
+
 export const createAnnouncementSchema = z.object({ body: announcementBody })
-export const updateAnnouncementSchema = z.object({ params: z.object({ id: objectId }), body: announcementBody.partial() })
+export const updateAnnouncementSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: announcementFields.partial(),
+})
 
 export const platformSettingsSchema = z.object({
   body: z.object({

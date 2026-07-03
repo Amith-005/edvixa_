@@ -26,12 +26,15 @@ export function AdminPagination({ pagination, onPage }: { pagination: Pagination
 
 export function StatusBadge({ value }: { value: string | boolean | null | undefined }) {
   const text = typeof value === 'boolean' ? (value ? 'Active' : 'Inactive') : String(value ?? 'unknown')
-  const normalized = text.toLowerCase()
-  const tone = ['active','approved','paid','published','completed','resolved','success','verified'].some((word) => normalized.includes(word))
+  const normalized = text.toLowerCase().replaceAll('_', ' ').trim()
+  const success = new Set(['active', 'approved', 'paid', 'published', 'completed', 'resolved', 'success', 'verified', 'enabled', 'yes', 'processed'])
+  const warning = new Set(['pending', 'warning', 'in progress', 'upcoming', 'awaiting completion', 'draft', 'requested'])
+  const danger = new Set(['failed', 'rejected', 'banned', 'inactive', 'cancelled', 'critical', 'closed', 'unverified', 'not completed', 'not approved', 'disabled', 'no'])
+  const tone = success.has(normalized)
     ? 'success'
-    : ['pending','warning','in_progress','upcoming','draft','requested'].some((word) => normalized.includes(word))
+    : warning.has(normalized)
       ? 'warning'
-      : ['failed','rejected','banned','inactive','cancelled','critical','closed'].some((word) => normalized.includes(word))
+      : danger.has(normalized)
         ? 'danger'
         : 'neutral'
   return <Badge tone={tone}>{text.replaceAll('_', ' ')}</Badge>
