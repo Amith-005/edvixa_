@@ -604,7 +604,7 @@ class AdminService {
               : {}),
           },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       if (!completed) throw new AppError(409, 'This booking was already updated', 'BOOKING_ALREADY_UPDATED')
       resultBooking = completed
@@ -1075,7 +1075,7 @@ class AdminService {
     return PlatformSettingModel.findOneAndUpdate(
       { key: 'platform' },
       { $setOnInsert: { key: 'platform' } },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     ).lean()
   }
 
@@ -1083,7 +1083,7 @@ class AdminService {
     const settings = await PlatformSettingModel.findOneAndUpdate(
       { key: 'platform' },
       { $set: { ...input, updatedBy: context.adminId } },
-      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
+      { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true },
     )
     await this.audit(context, 'settings.update', 'platformSettings', String(settings._id), 'Updated platform settings', input)
     return settings
@@ -1194,7 +1194,7 @@ class AdminService {
       ...(input.resolution !== undefined ? { resolution: input.resolution } : {}),
       resolvedAt: ['resolved', 'closed'].includes(input.status) ? new Date() : null,
     }
-    const ticket = await SupportTicketModel.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
+    const ticket = await SupportTicketModel.findByIdAndUpdate(id, { $set: update }, { returnDocument: 'after', runValidators: true })
     if (!ticket) throw new AppError(404, 'Support ticket not found', 'SUPPORT_TICKET_NOT_FOUND')
     await this.audit(context, 'support.update', 'supportTicket', id, `Support ticket moved to ${input.status}`)
     return ticket

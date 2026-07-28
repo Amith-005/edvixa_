@@ -13,7 +13,10 @@ import { useAuthStore } from '../../stores/auth.store'
 const apiError = (error: unknown, fallback: string) =>
   axios.isAxiosError(error) ? error.response?.data?.error?.message ?? fallback : fallback
 
-const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) })
+const loginSchema = z.object({
+  email: z.string().trim().min(1, 'Enter your email address').email('Enter a valid email address'),
+  password: z.string().min(1, 'Enter your password'),
+})
 type Login = z.infer<typeof loginSchema>
 
 export function LoginPage() {
@@ -49,9 +52,9 @@ export function LoginPage() {
 }
 
 const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8).regex(/[A-Z]/, 'Add an uppercase letter').regex(/[a-z]/, 'Add a lowercase letter').regex(/[0-9]/, 'Add a number'),
+  name: z.string().trim().min(2, 'Enter at least 2 characters'),
+  email: z.string().trim().min(1, 'Enter your email address').email('Enter a valid email address'),
+  password: z.string().min(8, 'Use at least 8 characters').regex(/[A-Z]/, 'Add an uppercase letter').regex(/[a-z]/, 'Add a lowercase letter').regex(/[0-9]/, 'Add a number'),
   role: z.enum(['student', 'teacher']),
   gradeLevel: z.string().optional(),
   qualification: z.string().optional(),

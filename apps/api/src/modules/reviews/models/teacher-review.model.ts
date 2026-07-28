@@ -30,6 +30,12 @@ const teacherReviewSchema = new Schema(
 
 teacherReviewSchema.index({ teacherId: 1, createdAt: -1 })
 teacherReviewSchema.index({ teacherId: 1, studentId: 1 })
-teacherReviewSchema.index({ bookingId: 1 }, { unique: true, sparse: true })
+teacherReviewSchema.index(
+  { bookingId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { bookingId: { $type: 'objectId' } },
+  },
+)
 
 export const TeacherReviewModel = model('TeacherReview', teacherReviewSchema)

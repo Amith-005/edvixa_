@@ -122,6 +122,15 @@ export function PortalLayout() {
             <strong>{user.name}</strong>
           </div>
           <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
+          <button
+            className="mobile-logout"
+            type="button"
+            onClick={logout}
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            <LogOut size={19} />
+          </button>
         </header>
         <div className="page-wrap">
           <Outlet />

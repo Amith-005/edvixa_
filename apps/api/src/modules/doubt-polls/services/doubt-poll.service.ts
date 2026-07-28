@@ -373,7 +373,7 @@ class DoubtPollService {
       const updated = await DoubtPollModel.findByIdAndUpdate(
         pollId,
         { $inc: { voteCount: -1 } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       if (updated && updated.voteCount < 1) {
         updated.voteCount = 1
@@ -390,7 +390,7 @@ class DoubtPollService {
     const updated = await DoubtPollModel.findByIdAndUpdate(
       pollId,
       { $inc: { voteCount: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     )
     return { joined: true, voteCount: updated?.voteCount ?? poll.voteCount + 1 }
   }
@@ -612,7 +612,7 @@ class DoubtPollService {
           resolvedAt: input.status === 'resolved' ? new Date() : null,
         },
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!updated) {

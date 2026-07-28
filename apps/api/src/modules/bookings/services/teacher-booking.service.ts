@@ -507,7 +507,7 @@ class TeacherBookingService {
         isBlocked: false,
       },
       { $set: { isBooked: true, bookingId: booking._id } },
-      { new: true },
+      { returnDocument: 'after' },
     )) as unknown as AvailabilityLean | null
 
     if (!newSlot) {

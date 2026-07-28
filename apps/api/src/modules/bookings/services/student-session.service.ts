@@ -400,7 +400,7 @@ class StudentSessionService {
         ],
       },
       { $set: { isBooked: true } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean()) as unknown as AvailabilityLean | null
 
     if (!newSlot) {

@@ -23,6 +23,13 @@ const schema = z
     COOKIE_DOMAIN: z.string().trim().default(''),
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(1),
     API_RATE_LIMIT: z.coerce.number().int().positive().default(300),
+    AI_PROVIDER: z.enum(['gemini', 'grok']).default('gemini'),
+    AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(120_000).default(45_000),
+    AI_MAX_RETRIES: z.coerce.number().int().min(0).max(3).default(1),
+    GEMINI_API_KEY: z.string().trim().default(''),
+    GEMINI_MODEL: z.string().trim().min(1).default('gemini-2.5-flash'),
+    XAI_API_KEY: z.string().trim().default(''),
+    XAI_MODEL: z.string().trim().min(1).default('grok-4.5'),
     EMAIL_PROVIDER: z.enum(['console', 'resend']).default('console'),
     EMAIL_FROM: z.string().min(3).default('Edvixa <onboarding@resend.dev>'),
     RESEND_API_KEY: z.string().default(''),
@@ -118,6 +125,20 @@ const schema = z
           code: 'custom',
           path: ['PAYMENT_PROVIDER'],
           message: 'Configure Razorpay credentials and webhook verification before production',
+        })
+      }
+      if (value.AI_PROVIDER === 'gemini' && !value.GEMINI_API_KEY.startsWith('AIza')) {
+        context.addIssue({
+          code: 'custom',
+          path: ['GEMINI_API_KEY'],
+          message: 'Configure a valid Gemini API key before production',
+        })
+      }
+      if (value.AI_PROVIDER === 'grok' && !value.XAI_API_KEY.startsWith('xai-')) {
+        context.addIssue({
+          code: 'custom',
+          path: ['XAI_API_KEY'],
+          message: 'Configure a valid xAI API key before production',
         })
       }
     }

@@ -22,7 +22,7 @@ export function signAccessToken(payload: AccessTokenPayload): string {
 }
 
 export function signRefreshToken(sessionId: string, userId: string): string {
-  return jwt.sign({ sub: userId, sid: sessionId, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
+  return jwt.sign({ sub: userId, sid: sessionId, type: 'refresh', jti: randomToken(16) }, env.JWT_REFRESH_SECRET, {
     algorithm,
     issuer,
     audience,

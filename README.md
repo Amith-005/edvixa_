@@ -7,7 +7,7 @@ Edvixa is a full-stack learning, practice, doubt-resolution, teacher-booking, an
 - **Web:** React 19, TypeScript, Vite, React Router, TanStack Query, Zustand, React Hook Form, Zod
 - **API:** Node.js 22+, Express 5, TypeScript, Mongoose, MongoDB
 - **Security:** short-lived JWT access tokens held in memory, rotating refresh-token cookies, role authorization, trusted-origin checks, request throttling, Helmet security headers, validation, audit logs
-- **External services:** Resend for transactional email and Razorpay for payments
+- **External services:** Gemini or Grok for generated assessments, Resend for transactional email, and Razorpay for payments
 - **Architecture:** feature-based React frontend and modular MVC/service/validation backend
 
 ## Implemented product areas
@@ -42,6 +42,11 @@ cp apps/web/.env.example apps/web/.env
 ```
 
 Edit `apps/api/.env` and supply a working `MONGODB_URI`. The Vite development server proxies `/api` to `http://localhost:5000`, while `VITE_API_URL` may be used for a separate API origin.
+
+Set `AI_PROVIDER=gemini` with `GEMINI_API_KEY`, or set `AI_PROVIDER=grok` with
+`XAI_API_KEY`. Practice creation deliberately fails with a retryable service
+error when the selected AI provider is unavailable; production never falls
+back to hard-coded or mock questions.
 
 ### 2. Install exact dependencies
 
@@ -100,7 +105,16 @@ Production startup intentionally fails when security-critical configuration is i
 - a non-default administrator email and password
 - Resend with a verified sender domain
 - Razorpay credentials and a webhook secret
+- a Gemini or xAI API key for the selected `AI_PROVIDER`
 - a production MongoDB connection string and suitable network access controls
+
+### AI practice generation
+
+The API requests a structured assessment from the configured model, validates
+the response against a strict schema, rejects duplicate questions/options and
+unknown topics, and stores the accepted questions with the provider/model used.
+Model names, timeout, and retry count are environment-controlled. Keep model
+keys only in the API secret store; never expose them through `VITE_*` variables.
 
 Recommended topology: serve the built web application and `/api/v1` through one HTTPS origin/reverse proxy. Same-origin deployment simplifies cookie and CSRF protections. When the web and API use different origins, set exact comma-separated frontend origins in `CLIENT_URL`, configure the cookie settings carefully, and never use wildcard credentialed CORS.
 

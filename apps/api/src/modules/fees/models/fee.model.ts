@@ -72,6 +72,12 @@ const feeSchema = new Schema(
 
 feeSchema.index({ studentId: 1, createdAt: -1 })
 feeSchema.index({ teacherId: 1, createdAt: -1 })
-feeSchema.index({ gatewayOrderId: 1 }, { unique: true, sparse: true })
+feeSchema.index(
+  { gatewayOrderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { gatewayOrderId: { $type: 'string' } },
+  },
+)
 
 export const FeeModel = model('Fee', feeSchema)

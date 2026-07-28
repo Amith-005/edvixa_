@@ -183,7 +183,7 @@ for (const reviewer of demoReviewers) {
       },
       $setOnInsert: { passwordHash: teacherPasswordHash },
     },
-    { upsert: true, new: true, runValidators: true },
+    { upsert: true, returnDocument: 'after', runValidators: true },
   )
   reviewerUsers.push(reviewerUser)
 }
@@ -232,7 +232,7 @@ for (const [teacherIndex, teacherData] of demoTeachers.entries()) {
       },
       $setOnInsert: { passwordHash: teacherPasswordHash },
     },
-    { upsert: true, new: true, runValidators: true },
+    { upsert: true, returnDocument: 'after', runValidators: true },
   )
 
   const subjectIds = teacherData.subjectSlugs
@@ -273,7 +273,7 @@ for (const [teacherIndex, teacherData] of demoTeachers.entries()) {
         averageResponseTimeMinutes: teacherData.averageResponseTimeMinutes,
       },
     },
-    { upsert: true, new: true, runValidators: true },
+    { upsert: true, returnDocument: 'after', runValidators: true },
   )
 
   await AvailabilityModel.deleteMany({
@@ -325,7 +325,7 @@ for (const [teacherIndex, teacherData] of demoTeachers.entries()) {
           reportReason: null,
         },
       },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true, returnDocument: 'after', runValidators: true },
     )
   }
 }

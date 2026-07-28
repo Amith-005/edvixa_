@@ -4,6 +4,7 @@
 
 - [ ] Use Node.js 22+ and run `npm ci` from the committed lockfile.
 - [ ] Run `npm run check`, `npm audit`, and `npm audit --omit=dev`.
+- [ ] Upgrade React Router when patched `react-router-dom` 8.3.0+ is published; until then, confirm the application remains SPA-only and does not enable unstable RSC APIs.
 - [ ] Create a MongoDB backup and verify restore access.
 - [ ] Configure a least-privilege MongoDB database user and network allowlist/private connectivity.
 - [ ] Set unique 32+ character JWT secrets from a secret manager.
@@ -12,6 +13,7 @@
 - [ ] Configure secure cookie options for the chosen domain topology.
 - [ ] Verify a Resend sender domain and test verification/reset email delivery.
 - [ ] Configure Razorpay test keys, webhook secret, and webhook URL.
+- [ ] Configure the selected Gemini/xAI provider, confirm model access, quotas, billing, regional availability, latency, and structured-output behavior.
 - [ ] Exercise payment success, failure, duplicate webhook, timeout, cancellation, and refund flows in test mode.
 - [ ] Review and run `npm run db:indexes` in a safe maintenance window.
 - [ ] Remove or disable development/demo accounts before live launch.
@@ -32,6 +34,7 @@
 - [ ] Complete teacher application and admin approval.
 - [ ] Create availability in `Asia/Kolkata` and at least one daylight-saving timezone; confirm displayed UTC/local times.
 - [ ] Complete a student practice attempt and review results/progress.
+- [ ] Confirm AI question generation covers every enabled subject/topic, rejects malformed provider output, and shows a clear retry message during provider outages.
 - [ ] Create and interact with a doubt poll.
 - [ ] Discover a teacher, reserve a slot, pay, accept, join, complete, review, and download a receipt.
 - [ ] Confirm expired unpaid reservations release their slots.

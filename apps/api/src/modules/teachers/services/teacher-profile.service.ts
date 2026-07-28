@@ -189,7 +189,7 @@ class TeacherProfileService {
         ? await UserModel.findByIdAndUpdate(
             userId,
             { $set: userUpdate },
-            { new: true, runValidators: true },
+            { returnDocument: 'after', runValidators: true },
           )
         : await UserModel.findById(userId)
 

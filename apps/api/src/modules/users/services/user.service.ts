@@ -16,7 +16,7 @@ class UserService {
   }
 
   async updateMe(userId: string, input: { name?: string; phone?: string | null; avatar?: string | null }) {
-    const user = await UserModel.findByIdAndUpdate(userId, { $set: input }, { new: true, runValidators: true }).lean()
+    const user = await UserModel.findByIdAndUpdate(userId, { $set: input }, { returnDocument: 'after', runValidators: true }).lean()
     if (!user) throw new AppError(404, 'User not found', 'USER_NOT_FOUND')
     return user
   }

@@ -39,6 +39,12 @@ describe('security tokens', () => {
     assert.throws(() => verifyRefreshToken(malformed))
   })
 
+  it('issues a unique token on every refresh rotation', () => {
+    const first = signRefreshToken('session-1', 'user-1')
+    const second = signRefreshToken('session-1', 'user-1')
+    assert.notEqual(first, second)
+  })
+
   it('creates non-plaintext token material of expected shape', () => {
     const token = randomToken()
     assert.equal(token.length, 64)

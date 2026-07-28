@@ -170,14 +170,14 @@ class StudentProfileService {
         ? UserModel.findByIdAndUpdate(
             userId,
             { $set: userUpdate },
-            { new: true, runValidators: true },
+            { returnDocument: 'after', runValidators: true },
           )
         : UserModel.findById(userId),
       Object.keys(profileUpdate).length > 0
         ? StudentProfileModel.findOneAndUpdate(
             { userId },
             { $set: profileUpdate },
-            { new: true, runValidators: true },
+            { returnDocument: 'after', runValidators: true },
           )
         : StudentProfileModel.findOne({ userId }),
     ])

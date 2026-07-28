@@ -7,7 +7,8 @@ type SessionResponse = { success: true; data: { accessToken: string; user: AuthU
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   withCredentials: true,
-  timeout: 20_000,
+  // Practice creation may include a validated AI generation request.
+  timeout: 75_000,
 })
 
 api.interceptors.request.use((config) => {

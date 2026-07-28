@@ -44,10 +44,10 @@ const practiceSessionSchema = new Schema(
     topicIds: [{ type: Schema.Types.ObjectId, required: true }],
     generatedBy: {
       type: String,
-      enum: ['ai', 'manual', 'template'],
-      default: 'template',
+      enum: ['ai'],
+      default: 'ai',
     },
-    aiProvider: { type: String, default: 'local-template' },
+    aiProvider: { type: String, required: true },
     difficulty: { type: Number, min: 1, max: 5, required: true },
     questionCount: { type: Number, min: 1, max: 50, required: true },
     estimatedMinutes: { type: Number, min: 1, required: true },

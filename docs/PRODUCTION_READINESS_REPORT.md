@@ -1,6 +1,6 @@
 # Edvixa Production Readiness Report
 
-**Assessment date:** 3 July 2026  
+**Assessment date:** 28 July 2026
 **Assessment scope:** supplied monorepo source, dependency tree, automated tests, production builds, configuration validation, and static SPA preview  
 **Verdict:** **Conditional production candidate**
 
@@ -12,7 +12,13 @@ The codebase passes the included automated code checks and contains a complete o
 - API tests cover health/readiness, security headers, request IDs, authorization, structured errors, CORS/trusted-origin rejection, token claims, token generation, IANA timezone conversion, daylight-saving behavior, and timezone validation.
 - API and web production builds pass.
 - The built SPA returns successfully for `/` and a nested admin route through Vite preview fallback.
-- Runtime and development dependency audits report no known vulnerabilities at verification time.
+- The registry-backed audit was completed. `concurrently`/`shell-quote` and
+  PostCSS advisories were remediated. npm still reports React Router's
+  `GHSA-qwww-vcr4-c8h2`; the upstream advisory states that it only affects
+  unstable RSC APIs, which this Vite SPA does not use. The documented patched
+  version (`8.3.0`) is not yet published as `react-router-dom`, so the app is
+  pinned to the newest published `7.18.1` and should upgrade when the patched
+  package becomes available.
 - No Rust source or Cargo project exists in the repository. The request to check for “rust” was treated as a residual-defect/stale-artifact review.
 - Stale backup files and generated TypeScript/Vite artifacts are excluded from the release package.
 
@@ -39,6 +45,8 @@ The codebase passes the included automated code checks and contains a complete o
 - Fixed Express 5 validated-query default/coercion propagation.
 - Fixed ObjectId use in admin aggregation totals.
 - Disabled automatic production index creation and added an explicit index synchronization command.
+- Replaced the hard-coded practice question bank with configurable Gemini/Grok structured generation, strict semantic validation, bounded retries/timeouts, and provider/model traceability.
+- Added a unique JWT ID to every refresh token so token rotation produces new token material even within the same second.
 
 ### Scheduling
 
@@ -53,12 +61,14 @@ The codebase passes the included automated code checks and contains a complete o
 - Completed student leaderboard, fees/receipts, announcements, and support.
 - Restored teacher students and added teacher announcements/support.
 - Added real verification-link handling and resend support.
+- Added a mobile sign-out control, visible keyboard focus treatment, reduced-motion support, and clearer authentication validation messages.
 
 ## Not verifiable without deployment credentials/infrastructure
 
 - Live MongoDB connection, seed execution, replica/transaction behavior, backup/restore, and production indexes.
 - Actual Resend domain ownership, sender verification, inbox delivery, spam placement, and bounce handling.
 - Actual Razorpay checkout, capture, webhook retries, refunds, payouts, reconciliation, and live-mode account permissions.
+- Actual Gemini/xAI key access, quota/billing, production latency, safety behavior, and curriculum acceptance testing.
 - Production TLS, reverse proxy, DNS, cookie-domain behavior, secret manager, monitoring, backups, and rollback.
 - Load/capacity testing, penetration testing, and legal/privacy/compliance review.
 - Complete cross-browser, assistive-technology, and real-device acceptance testing.

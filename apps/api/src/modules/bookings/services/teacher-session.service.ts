@@ -486,7 +486,7 @@ class TeacherSessionService {
           teacherNote: input.teacherNote?.trim() || booking.teacherNote || '',
         },
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
     if (!completed) {
       throw new AppError(409, 'This session was already updated', 'SESSION_ALREADY_UPDATED')

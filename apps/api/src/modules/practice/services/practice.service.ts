@@ -1,5 +1,6 @@
 import { Types } from 'mongoose'
 
+import { practiceQuestionGenerator } from '../../../infrastructure/ai/practice-question-generator.js'
 import { AppError } from '../../../shared/errors/app-error.js'
 import { StudentProfileModel } from '../../students/models/student-profile.model.js'
 import { SubjectModel } from '../../subjects/models/subject.model.js'
@@ -29,187 +30,6 @@ type MasteryEntry = {
   topicName?: string
   masteryScore?: number
 }
-
-type TemplateQuestion = {
-  text: string
-  options: string[]
-  correctAnswer: string
-  explanation: string
-}
-
-const templateQuestions: Record<string, TemplateQuestion[]> = {
-  Algebra: [
-    {
-      text: 'Solve for x: x + 3 = 7',
-      options: ['2', '3', '4', '5'],
-      correctAnswer: '4',
-      explanation: 'Subtract 3 from both sides, so x = 7 - 3 = 4.',
-    },
-    {
-      text: 'Which expression is the factorisation of x² - 5x + 6?',
-      options: ['(x - 1)(x - 6)', '(x - 2)(x - 3)', '(x + 2)(x + 3)', '(x - 2)(x + 3)'],
-      correctAnswer: '(x - 2)(x - 3)',
-      explanation: 'The numbers -2 and -3 multiply to 6 and add to -5.',
-    },
-    {
-      text: 'If 2x = 18, what is x?',
-      options: ['6', '8', '9', '10'],
-      correctAnswer: '9',
-      explanation: 'Divide both sides by 2 to get x = 9.',
-    },
-    {
-      text: 'What is the value of 3² + 4?',
-      options: ['10', '11', '12', '13'],
-      correctAnswer: '13',
-      explanation: '3² is 9, and 9 + 4 = 13.',
-    },
-  ],
-  Geometry: [
-    {
-      text: 'What is the sum of the interior angles of a triangle?',
-      options: ['90°', '180°', '270°', '360°'],
-      correctAnswer: '180°',
-      explanation: 'The three interior angles of every triangle add up to 180°.',
-    },
-    {
-      text: 'A square has side length 5 cm. What is its area?',
-      options: ['10 cm²', '20 cm²', '25 cm²', '30 cm²'],
-      correctAnswer: '25 cm²',
-      explanation: 'Area of a square is side × side, so 5 × 5 = 25 cm².',
-    },
-    {
-      text: 'How many sides does a hexagon have?',
-      options: ['5', '6', '7', '8'],
-      correctAnswer: '6',
-      explanation: 'A hexagon is a polygon with six sides.',
-    },
-    {
-      text: 'Which formula gives the circumference of a circle?',
-      options: ['πr²', '2πr', 'r²', 'πd²'],
-      correctAnswer: '2πr',
-      explanation: 'The circumference is 2πr, which is also equal to πd.',
-    },
-  ],
-  Mechanics: [
-    {
-      text: 'Which quantity is equal to mass × acceleration?',
-      options: ['Work', 'Power', 'Force', 'Pressure'],
-      correctAnswer: 'Force',
-      explanation: "Newton's second law states F = ma.",
-    },
-    {
-      text: 'What is the SI unit of velocity?',
-      options: ['m', 'm/s', 'm/s²', 'N'],
-      correctAnswer: 'm/s',
-      explanation: 'Velocity is displacement per unit time, measured in metres per second.',
-    },
-    {
-      text: 'An object remains at rest unless acted on by an external force. This is:',
-      options: ["Newton's first law", "Newton's second law", "Newton's third law", 'Law of gravitation'],
-      correctAnswer: "Newton's first law",
-      explanation: "Newton's first law describes inertia.",
-    },
-    {
-      text: 'Which of these is a vector quantity?',
-      options: ['Mass', 'Time', 'Speed', 'Acceleration'],
-      correctAnswer: 'Acceleration',
-      explanation: 'Acceleration has both magnitude and direction.',
-    },
-  ],
-  Electricity: [
-    {
-      text: 'What is the SI unit of electric current?',
-      options: ['Volt', 'Ohm', 'Ampere', 'Watt'],
-      correctAnswer: 'Ampere',
-      explanation: 'Electric current is measured in amperes (A).',
-    },
-    {
-      text: 'Which relation represents Ohm’s law?',
-      options: ['V = IR', 'P = VI', 'Q = It', 'E = mc²'],
-      correctAnswer: 'V = IR',
-      explanation: 'Ohm’s law relates voltage, current, and resistance as V = IR.',
-    },
-    {
-      text: 'What happens to total resistance when resistors are connected in series?',
-      options: ['It becomes zero', 'It decreases', 'It is the sum of the resistances', 'It equals the smallest resistance'],
-      correctAnswer: 'It is the sum of the resistances',
-      explanation: 'Series resistances add directly: R = R₁ + R₂ + ...',
-    },
-    {
-      text: 'Which material is commonly used as an electrical conductor?',
-      options: ['Rubber', 'Glass', 'Copper', 'Plastic'],
-      correctAnswer: 'Copper',
-      explanation: 'Copper has high electrical conductivity.',
-    },
-  ],
-  'Atomic Structure': [
-    {
-      text: 'Which particle has a positive electric charge?',
-      options: ['Electron', 'Proton', 'Neutron', 'Photon'],
-      correctAnswer: 'Proton',
-      explanation: 'Protons carry a positive charge.',
-    },
-    {
-      text: 'Where are electrons found in an atom?',
-      options: ['Inside protons', 'In the nucleus only', 'Around the nucleus', 'Inside neutrons'],
-      correctAnswer: 'Around the nucleus',
-      explanation: 'Electrons occupy energy levels or orbitals around the nucleus.',
-    },
-    {
-      text: 'The atomic number of an element equals the number of:',
-      options: ['Neutrons', 'Protons', 'Protons and neutrons', 'Electron shells'],
-      correctAnswer: 'Protons',
-      explanation: 'Atomic number is defined by the number of protons in the nucleus.',
-    },
-    {
-      text: 'Which particle has approximately no electric charge?',
-      options: ['Electron', 'Proton', 'Neutron', 'Ion'],
-      correctAnswer: 'Neutron',
-      explanation: 'Neutrons are electrically neutral.',
-    },
-  ],
-  'Chemical Bonding': [
-    {
-      text: 'A bond formed by transfer of electrons is called:',
-      options: ['Covalent bond', 'Ionic bond', 'Metallic bond', 'Hydrogen bond'],
-      correctAnswer: 'Ionic bond',
-      explanation: 'Ionic bonds form when electrons are transferred between atoms.',
-    },
-    {
-      text: 'A covalent bond is formed by:',
-      options: ['Sharing electrons', 'Sharing protons', 'Losing neutrons', 'Transferring nuclei'],
-      correctAnswer: 'Sharing electrons',
-      explanation: 'Atoms in a covalent bond share one or more pairs of electrons.',
-    },
-    {
-      text: 'Which compound is mainly ionic?',
-      options: ['H₂', 'O₂', 'NaCl', 'CH₄'],
-      correctAnswer: 'NaCl',
-      explanation: 'Sodium transfers an electron to chlorine, forming Na⁺ and Cl⁻ ions.',
-    },
-    {
-      text: 'Which electrons primarily take part in chemical bonding?',
-      options: ['Core electrons', 'Valence electrons', 'All neutrons', 'Inner protons'],
-      correctAnswer: 'Valence electrons',
-      explanation: 'Valence electrons in the outermost shell participate in bonding.',
-    },
-  ],
-}
-
-const fallbackQuestions: TemplateQuestion[] = [
-  {
-    text: 'Which study method is most useful for checking understanding?',
-    options: ['Passive rereading only', 'Answering practice questions', 'Skipping examples', 'Memorising without review'],
-    correctAnswer: 'Answering practice questions',
-    explanation: 'Active recall through practice questions helps test and strengthen understanding.',
-  },
-  {
-    text: 'What should you do first when solving a new problem?',
-    options: ['Guess immediately', 'Identify the given information', 'Ignore units', 'Skip the question'],
-    correctAnswer: 'Identify the given information',
-    explanation: 'Understanding the known values and the required result is the first step.',
-  },
-]
 
 class PracticeService {
   async getSetup(userId: string) {
@@ -315,19 +135,58 @@ class PracticeService {
       throw new AppError(422, 'One or more selected topics are unavailable', 'PRACTICE_TOPIC_UNAVAILABLE')
     }
 
+    const selectedTopics = subject.topics
+      .filter((topic) => uniqueTopicIds.includes(String(topic._id)))
+      .map((topic) => ({
+        id: String(topic._id),
+        name: topic.name,
+        description: topic.description,
+      }))
+    const profile = await StudentProfileModel.findOne({ userId }).select('gradeLevel').lean()
+    const generated = await practiceQuestionGenerator.generate({
+      subjectName: subject.name,
+      gradeLevel: profile?.gradeLevel,
+      topics: selectedTopics,
+      difficulty: input.difficulty,
+      questionCount: input.questionCount,
+      practiceMode: input.practiceMode,
+    })
+    const topicNames = new Map(selectedTopics.map((topic) => [topic.id, topic.name]))
+    const questions = generated.questions.map((question) => ({
+      _id: new Types.ObjectId(),
+      questionId: null,
+      text: question.text,
+      options: question.options,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      topicId: new Types.ObjectId(question.topicId),
+      topicName: topicNames.get(question.topicId) ?? 'Practice topic',
+      difficulty: question.difficulty,
+      points: 10,
+    }))
     const estimatedMinutes = Math.max(5, Math.ceil(input.questionCount * (1.1 + input.difficulty * 0.12)))
 
     const session = await PracticeSessionModel.create({
       studentId: new Types.ObjectId(userId),
       subjectId: new Types.ObjectId(input.subjectId),
       topicIds: uniqueTopicIds.map((topicId) => new Types.ObjectId(topicId)),
-      generatedBy: 'template',
-      aiProvider: 'local-template',
+      generatedBy: 'ai',
+      aiProvider: `${generated.provider}:${generated.model}`,
       difficulty: input.difficulty,
       questionCount: input.questionCount,
       estimatedMinutes,
       practiceMode: input.practiceMode,
-      status: 'pending',
+      questions,
+      answers: questions.map((question) => ({
+        questionId: question._id,
+        selectedAnswer: null,
+        isCorrect: null,
+        timeTakenSeconds: 0,
+        markedForReview: false,
+        answeredAt: null,
+      })),
+      status: 'in_progress',
+      startedAt: new Date(),
     })
 
     return {
@@ -335,9 +194,7 @@ class PracticeService {
       status: session.status,
       estimatedMinutes: session.estimatedMinutes,
       subject: { id: String(subject._id), name: subject.name },
-      selectedTopics: subject.topics
-        .filter((topic) => uniqueTopicIds.includes(String(topic._id)))
-        .map((topic) => ({ id: String(topic._id), name: topic.name })),
+      selectedTopics: selectedTopics.map((topic) => ({ id: topic.id, name: topic.name })),
     }
   }
 
@@ -900,27 +757,37 @@ class PracticeService {
       throw new AppError(422, 'No valid topics were found for this session', 'PRACTICE_TOPICS_EMPTY')
     }
 
-    const questions = Array.from({ length: session.questionCount }, (_, index) => {
-      const topic = topics[index % topics.length]!
-      const pool = templateQuestions[topic.name] ?? fallbackQuestions
-      const template = pool[Math.floor(index / topics.length) % pool.length]!
-      const questionId = new Types.ObjectId()
-
-      return {
-        _id: questionId,
-        questionId: null,
-        text: template.text,
-        options: template.options,
-        correctAnswer: template.correctAnswer,
-        explanation: template.explanation,
-        topicId: topic._id,
-        topicName: topic.name,
-        difficulty: session.practiceMode === 'adaptive' ? Math.max(1, Math.min(5, session.difficulty + ((index % 3) - 1))) : session.difficulty,
-        points: 10,
-      }
+    const profile = await StudentProfileModel.findOne({ userId }).select('gradeLevel').lean()
+    const generationTopics = topics.map((topic) => ({
+      id: String(topic._id),
+      name: topic.name,
+      description: topic.description,
+    }))
+    const generated = await practiceQuestionGenerator.generate({
+      subjectName: subject.name,
+      gradeLevel: profile?.gradeLevel,
+      topics: generationTopics,
+      difficulty: session.difficulty,
+      questionCount: session.questionCount,
+      practiceMode: session.practiceMode,
     })
+    const topicNames = new Map(generationTopics.map((topic) => [topic.id, topic.name]))
+    const questions = generated.questions.map((question) => ({
+      _id: new Types.ObjectId(),
+      questionId: null,
+      text: question.text,
+      options: question.options,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      topicId: new Types.ObjectId(question.topicId),
+      topicName: topicNames.get(question.topicId) ?? 'Practice topic',
+      difficulty: question.difficulty,
+      points: 10,
+    }))
 
     session.set({
+      generatedBy: 'ai',
+      aiProvider: `${generated.provider}:${generated.model}`,
       questions,
       answers: questions.map((question) => ({
         questionId: question._id,

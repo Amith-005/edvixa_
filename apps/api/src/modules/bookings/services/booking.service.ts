@@ -284,7 +284,7 @@ class BookingService {
           paymentExpiresAt: null,
         },
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!booking) return false
@@ -477,7 +477,7 @@ class BookingService {
         isBlocked: false,
       },
       { $set: { isBooked: true } },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!claimedSlot) {
@@ -600,7 +600,7 @@ class BookingService {
         isBlocked: false,
       },
       { $set: { isBooked: true } },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!claimedSlot) {
@@ -775,7 +775,7 @@ class BookingService {
             paymentExpiresAt: { $gt: paidAt },
           },
           { $set: { paymentStatus: 'paid', paymentExpiresAt: null } },
-          { new: true },
+          { returnDocument: 'after' },
         )
 
     if (!activeBooking || ['cancelled', 'rejected'].includes(activeBooking.status)) {
